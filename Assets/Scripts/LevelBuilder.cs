@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// GDD sections 4/6/8 environments, built procedurally from primitives.
+// GDD sections 4-8 environments, built procedurally from primitives.
 // ponytail: primitive placeholder arenas per GDD section 23 ("use placeholder
 // assets until the gameplay is fun") — replace with modeled environments in
 // the era-production phase.
@@ -14,6 +14,7 @@ public static class LevelBuilder
         public float fogDensity, sunIntensity;
         public Vector3 sunAngles;
         public bool emissiveObstacles;
+        public int obstacleCount = 14;
     }
 
     static Theme For(WarEra era)
@@ -23,36 +24,63 @@ public static class LevelBuilder
             case WarEra.Medieval:
                 return new Theme
                 {
-                    floor = new Color(0.35f, 0.42f, 0.24f),   // grass field
-                    wall = new Color(0.45f, 0.44f, 0.42f),    // castle stone
-                    obstacle = new Color(0.5f, 0.38f, 0.24f), // wooden carts/palisades
+                    floor = new Color(0.35f, 0.42f, 0.24f),    // grass field
+                    wall = new Color(0.45f, 0.44f, 0.42f),     // castle stone
+                    obstacle = new Color(0.5f, 0.38f, 0.24f),  // carts / palisades
                     fog = new Color(0.75f, 0.72f, 0.6f), fogDensity = 0.006f,
                     sun = new Color(1f, 0.93f, 0.78f), sunIntensity = 1.15f,
                     sunAngles = new Vector3(45f, -35f, 0f),
-                    ambient = new Color(0.45f, 0.44f, 0.38f)
+                    ambient = new Color(0.45f, 0.44f, 0.38f),
+                    obstacleCount = 10
+                };
+            case WarEra.WorldWarOne:
+                return new Theme
+                {
+                    floor = new Color(0.3f, 0.26f, 0.2f),      // mud
+                    wall = new Color(0.34f, 0.3f, 0.24f),
+                    obstacle = new Color(0.36f, 0.32f, 0.24f), // timber / debris
+                    fog = new Color(0.52f, 0.5f, 0.44f), fogDensity = 0.02f,
+                    sun = new Color(0.75f, 0.72f, 0.65f), sunIntensity = 0.65f,
+                    sunAngles = new Vector3(30f, 140f, 0f),
+                    ambient = new Color(0.32f, 0.3f, 0.27f),
+                    obstacleCount = 6                          // trenches carry the layout
                 };
             case WarEra.WorldWarTwo:
                 return new Theme
                 {
-                    floor = new Color(0.32f, 0.3f, 0.24f),    // churned earth
-                    wall = new Color(0.38f, 0.36f, 0.32f),    // ruined concrete
-                    obstacle = new Color(0.33f, 0.36f, 0.27f),// sandbags/crates
+                    floor = new Color(0.32f, 0.3f, 0.24f),     // churned earth
+                    wall = new Color(0.38f, 0.36f, 0.32f),     // ruined concrete
+                    obstacle = new Color(0.33f, 0.36f, 0.27f), // sandbags / crates
                     fog = new Color(0.55f, 0.55f, 0.5f), fogDensity = 0.014f,
                     sun = new Color(0.85f, 0.85f, 0.8f), sunIntensity = 0.85f,
                     sunAngles = new Vector3(38f, 160f, 0f),
-                    ambient = new Color(0.35f, 0.35f, 0.33f)
+                    ambient = new Color(0.35f, 0.35f, 0.33f),
+                    obstacleCount = 12
+                };
+            case WarEra.Modern:
+                return new Theme
+                {
+                    floor = new Color(0.24f, 0.24f, 0.26f),    // asphalt
+                    wall = new Color(0.3f, 0.31f, 0.34f),      // concrete barrier
+                    obstacle = new Color(0.38f, 0.34f, 0.26f), // crates / barricades
+                    fog = new Color(0.5f, 0.53f, 0.58f), fogDensity = 0.01f,
+                    sun = new Color(0.95f, 0.93f, 0.88f), sunIntensity = 0.95f,
+                    sunAngles = new Vector3(52f, 25f, 0f),
+                    ambient = new Color(0.36f, 0.37f, 0.4f),
+                    obstacleCount = 10
                 };
             default:  // Future
                 return new Theme
                 {
-                    floor = new Color(0.12f, 0.13f, 0.17f),   // megacity deck
+                    floor = new Color(0.12f, 0.13f, 0.17f),    // megacity deck
                     wall = new Color(0.16f, 0.18f, 0.24f),
                     obstacle = new Color(0.2f, 0.24f, 0.32f),
                     fog = new Color(0.05f, 0.07f, 0.12f), fogDensity = 0.012f,
                     sun = new Color(0.55f, 0.65f, 1f), sunIntensity = 0.7f,
                     sunAngles = new Vector3(55f, 20f, 0f),
                     ambient = new Color(0.18f, 0.2f, 0.3f),
-                    emissiveObstacles = true
+                    emissiveObstacles = true,
+                    obstacleCount = 12
                 };
         }
     }
@@ -88,7 +116,7 @@ public static class LevelBuilder
 
         // Cover obstacles — deterministic layout per era, center lane kept clear.
         var rng = new System.Random(100 + (int)era);
-        for (int i = 0; i < 14; i++)
+        for (int i = 0; i < t.obstacleCount; i++)
         {
             float x = Mathf.Lerp(-ArenaHalf + 3f, ArenaHalf - 3f, (float)rng.NextDouble());
             float z = Mathf.Lerp(-ArenaHalf + 3f, ArenaHalf - 3f, (float)rng.NextDouble());
@@ -98,6 +126,8 @@ public static class LevelBuilder
             float sz = Mathf.Lerp(1.2f, 4f, (float)rng.NextDouble());
             Block(root, new Vector3(x, sy * 0.5f, z), new Vector3(sx, sy, sz), t.obstacle, t.emissiveObstacles);
         }
+
+        BuildEraStructures(root, era, t, rng);
 
         playerSpawn = new Vector3(0f, 1.2f, -ArenaHalf + 6f);
 
@@ -113,17 +143,76 @@ public static class LevelBuilder
         return root;
     }
 
+    // Era-identity landmarks (GDD sections 4-8 environments).
+    static void BuildEraStructures(GameObject root, WarEra era, Theme t, System.Random rng)
+    {
+        switch (era)
+        {
+            case WarEra.Medieval:
+                // corner towers + crenellated wall tops
+                foreach (var sx in new[] { -1f, 1f })
+                    foreach (var sz in new[] { -1f, 1f })
+                        Cylinder(root, new Vector3(sx * ArenaHalf, 3f, sz * ArenaHalf), 1.6f, 6f, t.wall);
+                for (float x = -ArenaHalf + 1f; x <= ArenaHalf - 1f; x += 2.5f)
+                {
+                    Block(root, new Vector3(x, 4.3f, ArenaHalf + 0.5f), new Vector3(1.1f, 0.6f, 1f), t.wall, false);
+                    Block(root, new Vector3(x, 4.3f, -ArenaHalf - 0.5f), new Vector3(1.1f, 0.6f, 1f), t.wall, false);
+                }
+                break;
+
+            case WarEra.WorldWarOne:
+                // trench lines with passage gaps + shell craters
+                foreach (float z in new[] { -5f, 3f, 11f })
+                {
+                    Block(root, new Vector3(-12.5f, 0.55f, z), new Vector3(17f, 1.1f, 0.9f), t.wall, false);
+                    Block(root, new Vector3(12.5f, 0.55f, z), new Vector3(17f, 1.1f, 0.9f), t.wall, false);
+                }
+                for (int i = 0; i < 10; i++)
+                {
+                    float cx = Mathf.Lerp(-18f, 18f, (float)rng.NextDouble());
+                    float cz = Mathf.Lerp(-16f, 18f, (float)rng.NextDouble());
+                    Decal(root, new Vector3(cx, 0.03f, cz), new Vector3(2.8f, 0.06f, 2.8f), t.floor * 0.55f);
+                }
+                break;
+
+            case WarEra.WorldWarTwo:
+                // sandbag rows + ruined building shells
+                foreach (float z in new[] { -2f, 8f })
+                {
+                    Block(root, new Vector3(-8f, 0.45f, z), new Vector3(6f, 0.9f, 0.8f), new Color(0.5f, 0.45f, 0.32f), false);
+                    Block(root, new Vector3(8f, 0.45f, z), new Vector3(6f, 0.9f, 0.8f), new Color(0.5f, 0.45f, 0.32f), false);
+                }
+                Block(root, new Vector3(-15f, 2.5f, 14f), new Vector3(6f, 5f, 0.6f), t.wall, false);
+                Block(root, new Vector3(15f, 1.8f, 12f), new Vector3(0.6f, 3.6f, 7f), t.wall, false);
+                break;
+
+            case WarEra.Modern:
+                // city blocks around the edges + container stacks
+                foreach (var b in new[] {
+                    new Vector4(-16f, 15f, 6f, 11f), new Vector4(16f, 15f, 7f, 9f),
+                    new Vector4(-16f, -2f, 5f, 13f), new Vector4(16f, 1f, 6f, 8f) })
+                {
+                    Block(root, new Vector3(b.x, b.w * 0.5f, b.y), new Vector3(b.z, b.w, 5f), t.wall, false);
+                }
+                Block(root, new Vector3(-6f, 1.25f, 10f), new Vector3(2.5f, 2.5f, 6f), new Color(0.6f, 0.3f, 0.2f), false);
+                Block(root, new Vector3(6f, 1.25f, 4f), new Vector3(6f, 2.5f, 2.5f), new Color(0.25f, 0.4f, 0.5f), false);
+                break;
+
+            case WarEra.Future:
+                // neon pylons
+                foreach (var p in new[] { new Vector3(-14f, 0f, 8f), new Vector3(14f, 0f, 8f),
+                                          new Vector3(-8f, 0f, 16f), new Vector3(8f, 0f, 16f) })
+                    Block(root, new Vector3(p.x, 3.5f, p.z), new Vector3(0.5f, 7f, 0.5f), new Color(0.25f, 0.9f, 1f), true);
+                break;
+        }
+    }
+
     public static EnemyAI SpawnEnemy(WarEra era, Vector3 position, Transform target, Transform parent)
     {
-        GameObject body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        // Root carries physics + logic; the humanoid look lives on a child (EnemyVisual).
+        var body = new GameObject("Enemy");
         body.transform.SetParent(parent);
         body.transform.position = position;
-
-        GameObject head = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        Object.Destroy(head.GetComponent<Collider>());
-        head.transform.SetParent(body.transform);
-        head.transform.localPosition = new Vector3(0f, 0.85f, 0f);
-        head.transform.localScale = new Vector3(0.45f, 0.45f, 0.45f);
 
         var cc = body.AddComponent<CharacterController>();
         cc.height = 2f;
@@ -133,27 +222,49 @@ public static class LevelBuilder
         var ai = body.AddComponent<EnemyAI>();
         ai.SetTarget(target);
 
-        Color bodyColor, headColor;
+        Color uniform, helmet;
+        bool ranged;
         switch (era)
         {
             case WarEra.Medieval:  // swordsman — fast melee rusher
                 body.name = "Medieval Swordsman";
-                bodyColor = new Color(0.55f, 0.15f, 0.12f); headColor = new Color(0.7f, 0.7f, 0.72f);
+                uniform = new Color(0.55f, 0.15f, 0.12f); helmet = new Color(0.7f, 0.7f, 0.72f);
+                ranged = false;
                 ai.moveSpeed = 4.6f; ai.attackRange = 2.3f; ai.attackDamage = 14f;
                 ai.attackRate = 1.1f; ai.attackWindup = 0.4f;
                 health.maxHealth = 70f;
                 break;
+            case WarEra.WorldWarOne:  // trench rifleman — slow deliberate bolt-action
+                body.name = "Trench Rifleman";
+                uniform = new Color(0.42f, 0.38f, 0.3f); helmet = new Color(0.35f, 0.33f, 0.28f);
+                ranged = true;
+                ai.isRanged = true; ai.moveSpeed = 2.8f; ai.attackRange = 16f;
+                ai.attackDamage = 14f; ai.attackRate = 0.45f; ai.attackWindup = 0.75f;
+                ai.rangedSpread = 0.05f; ai.tracerColor = new Color(1f, 0.8f, 0.4f);
+                health.maxHealth = 65f;
+                break;
             case WarEra.WorldWarTwo:  // rifleman — keeps distance, aimed shots
                 body.name = "WWII Rifleman";
-                bodyColor = new Color(0.34f, 0.38f, 0.25f); headColor = new Color(0.42f, 0.4f, 0.3f);
+                uniform = new Color(0.34f, 0.38f, 0.25f); helmet = new Color(0.3f, 0.32f, 0.24f);
+                ranged = true;
                 ai.isRanged = true; ai.moveSpeed = 3.2f; ai.attackRange = 15f;
                 ai.attackDamage = 9f; ai.attackRate = 0.8f; ai.attackWindup = 0.55f;
                 ai.rangedSpread = 0.07f; ai.tracerColor = new Color(1f, 0.85f, 0.45f);
                 health.maxHealth = 60f;
                 break;
+            case WarEra.Modern:  // urban soldier — faster fire, tougher
+                body.name = "Modern Soldier";
+                uniform = new Color(0.25f, 0.27f, 0.24f); helmet = new Color(0.15f, 0.16f, 0.15f);
+                ranged = true;
+                ai.isRanged = true; ai.moveSpeed = 3.8f; ai.attackRange = 14f;
+                ai.attackDamage = 6f; ai.attackRate = 2.2f; ai.attackWindup = 0.35f;
+                ai.rangedSpread = 0.07f; ai.tracerColor = new Color(1f, 0.9f, 0.6f);
+                health.maxHealth = 90f;
+                break;
             default:  // Future combat bot — energy fire, dashes sideways
                 body.name = "Future Combat Bot";
-                bodyColor = new Color(0.15f, 0.17f, 0.2f); headColor = new Color(0.2f, 0.9f, 1f);
+                uniform = new Color(0.15f, 0.17f, 0.2f); helmet = new Color(0.2f, 0.9f, 1f);
+                ranged = true;
                 ai.isRanged = true; ai.canDash = true; ai.moveSpeed = 4.2f;
                 ai.attackRange = 13f; ai.attackDamage = 7f; ai.attackRate = 1.6f;
                 ai.attackWindup = 0.3f; ai.rangedSpread = 0.05f;
@@ -161,8 +272,7 @@ public static class LevelBuilder
                 health.maxHealth = 80f;
                 break;
         }
-        body.GetComponent<Renderer>().material = ColoredMaterial(bodyColor, false);
-        head.GetComponent<Renderer>().material = ColoredMaterial(headColor, era == WarEra.Future);
+        ai.visual = EnemyVisual.Build(body.transform, era, uniform, helmet, ranged);
         return ai;
     }
 
@@ -204,5 +314,25 @@ public static class LevelBuilder
         go.transform.position = pos;
         go.transform.localScale = scale;
         go.GetComponent<Renderer>().material = ColoredMaterial(color, emissive);
+    }
+
+    static void Cylinder(GameObject root, Vector3 pos, float radius, float height, Color color)
+    {
+        GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        go.transform.SetParent(root.transform);
+        go.transform.position = pos;
+        go.transform.localScale = new Vector3(radius * 2f, height * 0.5f, radius * 2f);
+        go.GetComponent<Renderer>().material = ColoredMaterial(color, false);
+    }
+
+    // flat visual-only marking (no collider) — shell craters, scorch marks
+    static void Decal(GameObject root, Vector3 pos, Vector3 scale, Color color)
+    {
+        GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        Object.Destroy(go.GetComponent<Collider>());
+        go.transform.SetParent(root.transform);
+        go.transform.position = pos;
+        go.transform.localScale = scale;
+        go.GetComponent<Renderer>().material = ColoredMaterial(color, false);
     }
 }

@@ -7,8 +7,9 @@ public class GameManager : MonoBehaviour
 
     public static GameManager Instance { get; private set; }
 
-    // MVP chapter order per GDD section 21: Medieval -> WWII -> Future.
-    public static readonly WarEra[] Chapters = { WarEra.Medieval, WarEra.WorldWarTwo, WarEra.Future };
+    // Full campaign order (GDD section 22) — all five eras playable.
+    public static readonly WarEra[] Chapters =
+        { WarEra.Medieval, WarEra.WorldWarOne, WarEra.WorldWarTwo, WarEra.Modern, WarEra.Future };
 
     public GameState State { get; private set; } = GameState.Menu;
     public bool IsPlaying { get { return State == GameState.Playing; } }
@@ -95,7 +96,7 @@ public class GameManager : MonoBehaviour
         Player.AttachCamera(cam.transform);
         cam.fieldOfView = 70f;
         PlayerHealth.onDeath += OnPlayerDeath;
-        Player.weapon = CreateWeapon(era);
+        Player.SetWeapons(CreateLoadout(era, cc));
 
         foreach (Vector3 spawn in enemySpawns)
             LevelBuilder.SpawnEnemy(era, spawn, playerRoot.transform, levelRoot.transform);
@@ -113,12 +114,11 @@ public class GameManager : MonoBehaviour
         SetCursorLocked(true);
     }
 
-    WeaponBase CreateWeapon(WarEra era)
+    // Two weapons per era (GDD section 20): a ranged + melee pair, each with a
+    // first-person viewmodel. Switch with 1/2 or the mouse wheel.
+    System.Collections.Generic.List<WeaponBase> CreateLoadout(WarEra era, Collider playerCollider)
     {
-        var weaponGo = new GameObject("Weapon");
-        weaponGo.transform.SetParent(cam.transform);
-        weaponGo.transform.localPosition = Vector3.zero;
-        weaponGo.transform.localRotation = Quaternion.identity;
+        var list = new System.Collections.Generic.List<WeaponBase>();
 
         // Ray origin sits ahead of the camera so shots clear the player's own collider.
         var firePoint = new GameObject("FirePoint").transform;
@@ -126,41 +126,92 @@ public class GameManager : MonoBehaviour
         firePoint.localPosition = new Vector3(0f, 0f, 0.6f);
         firePoint.localRotation = Quaternion.identity;
 
+        Color steel = new Color(0.65f, 0.66f, 0.7f);
+        Color wood = new Color(0.36f, 0.24f, 0.13f);
+        Color gunmetal = new Color(0.2f, 0.2f, 0.22f);
+        Color cyan = new Color(0.3f, 0.95f, 1f);
+
         switch (era)
         {
             case WarEra.Medieval:
-                var sword = weaponGo.AddComponent<MeleeWeapon>();
-                sword.weaponName = "Longsword";
-                sword.damage = 34f;
-                sword.attackRate = 1.7f;
-                sword.origin = cam.transform;
-                return sword;
+                list.Add(Melee("Longsword", 34f, 1.7f, 2.4f, ViewModelKind.Sword, steel, steel));
+                var bow = NewWeapon<ProjectileWeapon>("War Bow");
+                bow.damage = 40f;
+                bow.attackRate = 1.1f;
+                bow.launchSpeed = 42f;
+                bow.firePoint = firePoint;
+                bow.ownerCollider = playerCollider;
+                bow.viewModel = WeaponViewModel.Create(cam, ViewModelKind.Bow, wood, wood, false);
+                list.Add(bow);
+                break;
+
+            case WarEra.WorldWarOne:
+                list.Add(Firearm("Bolt-Action Rifle", 45f, 0.9f, 5, 45, 2.3f, 0.008f, false,
+                    new Color(1f, 0.8f, 0.4f), ViewModelKind.Rifle, wood, gunmetal, false, firePoint));
+                list.Add(Melee("Trench Knife", 22f, 2.6f, 1.9f, ViewModelKind.Knife, steel, steel));
+                break;
+
             case WarEra.WorldWarTwo:
-                var rifle = weaponGo.AddComponent<FirearmWeapon>();
-                rifle.weaponName = "Service Rifle";
-                rifle.damage = 26f;
-                rifle.attackRate = 3.2f;
-                rifle.magazineSize = 8;
-                rifle.ammunition = 8;
-                rifle.reserveAmmo = 72;
-                rifle.reloadDuration = 1.7f;
-                rifle.spread = 0.012f;
-                rifle.firePoint = firePoint;
-                return rifle;
-            default:
-                var plasma = weaponGo.AddComponent<FirearmWeapon>();
-                plasma.weaponName = "Plasma Rifle";
-                plasma.damage = 16f;
-                plasma.attackRate = 7f;
-                plasma.magazineSize = 30;
-                plasma.ammunition = 30;
-                plasma.reserveAmmo = 180;
-                plasma.reloadDuration = 1.3f;
-                plasma.spread = 0.02f;
-                plasma.tracerColor = new Color(0.35f, 0.95f, 1f);
-                plasma.firePoint = firePoint;
-                return plasma;
+                list.Add(Firearm("Service Rifle", 26f, 3.2f, 8, 72, 1.7f, 0.012f, false,
+                    new Color(1f, 0.85f, 0.45f), ViewModelKind.Rifle, wood, gunmetal, false, firePoint));
+                list.Add(Firearm("Sidearm", 15f, 4.5f, 7, 42, 1.2f, 0.02f, false,
+                    new Color(1f, 0.85f, 0.45f), ViewModelKind.Pistol, gunmetal, gunmetal, false, firePoint));
+                break;
+
+            case WarEra.Modern:
+                list.Add(Firearm("Assault Carbine", 11f, 9f, 30, 180, 1.6f, 0.025f, true,
+                    new Color(1f, 0.9f, 0.6f), ViewModelKind.Rifle, gunmetal, new Color(0.28f, 0.3f, 0.28f), false, firePoint));
+                list.Add(Melee("Combat Knife", 26f, 3f, 1.9f, ViewModelKind.Knife, steel, steel));
+                break;
+
+            default:  // Future
+                list.Add(Firearm("Plasma Rifle", 16f, 7f, 30, 180, 1.3f, 0.02f, true,
+                    cyan, ViewModelKind.Rifle, gunmetal, cyan, true, firePoint));
+                list.Add(Melee("Energy Blade", 45f, 2f, 2.5f, ViewModelKind.EnergyBlade, gunmetal, cyan));
+                break;
         }
+        return list;
+    }
+
+    T NewWeapon<T>(string name) where T : WeaponBase
+    {
+        var go = new GameObject("Weapon_" + name);
+        go.transform.SetParent(cam.transform);
+        go.transform.localPosition = Vector3.zero;
+        go.transform.localRotation = Quaternion.identity;
+        var w = go.AddComponent<T>();
+        w.weaponName = name;
+        return w;
+    }
+
+    MeleeWeapon Melee(string name, float damage, float rate, float radius, ViewModelKind kind, Color main, Color accent)
+    {
+        var m = NewWeapon<MeleeWeapon>(name);
+        m.damage = damage;
+        m.attackRate = rate;
+        m.attackRadius = radius;
+        m.origin = cam.transform;
+        m.viewModel = WeaponViewModel.Create(cam, kind, main, accent, kind == ViewModelKind.EnergyBlade);
+        return m;
+    }
+
+    FirearmWeapon Firearm(string name, float damage, float rate, int mag, int reserve, float reload,
+        float spread, bool auto, Color tracer, ViewModelKind kind, Color main, Color accent,
+        bool emissive, Transform firePoint)
+    {
+        var f = NewWeapon<FirearmWeapon>(name);
+        f.damage = damage;
+        f.attackRate = rate;
+        f.magazineSize = mag;
+        f.ammunition = mag;
+        f.reserveAmmo = reserve;
+        f.reloadDuration = reload;
+        f.spread = spread;
+        f.autoFire = auto;
+        f.tracerColor = tracer;
+        f.firePoint = firePoint;
+        f.viewModel = WeaponViewModel.Create(cam, kind, main, accent, emissive);
+        return f;
     }
 
     void OnObjectiveComplete()
@@ -209,7 +260,13 @@ public class GameManager : MonoBehaviour
     void ClearLevel()
     {
         EnemyAI.Alive.Clear();
-        if (cam != null) cam.transform.SetParent(null);
+        if (cam != null)
+        {
+            cam.transform.SetParent(null);
+            // weapons, viewmodels and fire points live under the camera — clear them
+            for (int i = cam.transform.childCount - 1; i >= 0; i--)
+                Destroy(cam.transform.GetChild(i).gameObject);
+        }
         if (levelRoot != null) Destroy(levelRoot);
         if (playerRoot != null) Destroy(playerRoot);
         cam.clearFlags = CameraClearFlags.Skybox;

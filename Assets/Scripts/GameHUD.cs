@@ -81,14 +81,6 @@ public class GameHUD : MonoBehaviour
             Rect r = Centered(w, h, y);
             y += step;
 
-            if (chapterIndex < 0)
-            {
-                GUI.enabled = false;
-                GUI.Button(r, name + "  —  full campaign", button);
-                GUI.enabled = true;
-                continue;
-            }
-
             bool unlocked = gm.IsChapterUnlocked(chapterIndex);
             GUI.enabled = unlocked;
             string text = unlocked ? name : name + "  —  LOCKED (finish previous chapter)";
@@ -100,8 +92,8 @@ public class GameHUD : MonoBehaviour
 
         small.fontSize = (int)(19 * S);
         small.normal.textColor = new Color(0.5f, 0.5f, 0.52f);
-        GUI.Label(Centered(1400 * S, 60 * S, Screen.height - 70 * S),
-            "WASD move · Mouse look · LMB attack · RMB block (Medieval) · R reload · Space jump (double in Future) · Q dash (Future) · Shift sprint · Esc pause",
+        GUI.Label(Centered(1500 * S, 60 * S, Screen.height - 70 * S),
+            "WASD move · Mouse look · LMB attack · RMB block (melee) · 1-2/scroll switch weapon · R reload · Space jump (double in Future) · Q dash (Future) · Shift sprint · Esc pause",
             small);
     }
 
@@ -141,20 +133,40 @@ public class GameHUD : MonoBehaviour
         }
 
         // weapon / ammo (bottom right)
-        var firearm = gm.Player != null ? gm.Player.weapon as FirearmWeapon : null;
+        WeaponBase current = gm.Player != null ? gm.Player.CurrentWeapon : null;
+        var firearm = current as FirearmWeapon;
         label.fontSize = (int)(26 * S);
         string wtext;
         if (firearm != null)
             wtext = firearm.IsReloading
                 ? firearm.weaponName + "  RELOADING…"
                 : firearm.weaponName + "   " + firearm.ammunition + " / " + firearm.reserveAmmo;
-        else if (gm.Player != null && gm.Player.weapon != null)
-            wtext = gm.Player.weapon.weaponName + (gm.Player.IsBlocking ? "   [BLOCKING]" : "   (RMB to block)");
+        else if (current is MeleeWeapon)
+            wtext = current.weaponName + (gm.Player.IsBlocking ? "   [BLOCKING]" : "   (RMB to block)");
+        else if (current != null)
+            wtext = current.weaponName;
         else wtext = "";
         var wRect = new Rect(Screen.width - 560 * S, Screen.height - 64 * S, 530 * S, 30 * S);
         Fill(new Rect(wRect.x - 6, wRect.y - 3, wRect.width + 12, wRect.height + 6), new Color(0f, 0f, 0f, 0.45f));
         label.alignment = TextAnchor.MiddleRight;
         GUI.Label(wRect, wtext, label);
+
+        // weapon slots (switch with 1-2 / scroll)
+        if (gm.Player != null && gm.Player.weapons.Count > 1)
+        {
+            small.fontSize = (int)(17 * S);
+            small.normal.textColor = new Color(0.75f, 0.75f, 0.75f);
+            string slots = "";
+            for (int i = 0; i < gm.Player.weapons.Count; i++)
+            {
+                bool act = i == gm.Player.ActiveWeaponIndex;
+                slots += (act ? "[" : " ") + (i + 1) + " " + gm.Player.weapons[i].weaponName + (act ? "]" : " ") + "   ";
+            }
+            small.alignment = TextAnchor.MiddleRight;
+            GUI.Label(new Rect(Screen.width - 560 * S, Screen.height - 32 * S, 530 * S, 22 * S),
+                slots + "· scroll/1-2", small);
+            small.alignment = TextAnchor.MiddleCenter;
+        }
         label.alignment = TextAnchor.UpperLeft;
 
         // objective (top left) + era (top right)

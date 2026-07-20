@@ -9,6 +9,7 @@ public class FirearmWeapon : WeaponBase
     public int reserveAmmo = 40;
     public float reloadDuration = 1.6f;
     public float spread = 0.012f;
+    public bool autoFire;               // true = hold to fire (Modern/Future)
     public Color tracerColor = new Color(1f, 0.85f, 0.4f);
 
     public bool IsReloading { get; private set; }
@@ -51,5 +52,6 @@ public class FirearmWeapon : WeaponBase
             if (target != null) target.TakeDamage(damage);
         }
         Tracer.Spawn(firePoint.position - firePoint.up * 0.12f, end, tracerColor);
+        NotifyFired();
     }
 }

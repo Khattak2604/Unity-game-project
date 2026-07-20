@@ -24,31 +24,39 @@ procedurally at runtime from primitives.
 | Input | Action |
 |---|---|
 | WASD / Mouse | Move / look |
-| LMB | Attack (sword swing / fire) |
-| RMB (hold) | Block — Medieval only, absorbs 80% damage |
+| LMB | Attack (swing / fire / loose arrow) |
+| RMB (hold) | Block — melee weapons, absorbs 80% damage |
+| 1–2 / scroll | Switch weapon |
 | R | Reload |
 | Space | Jump — **double jump in Future era** |
 | Q | Dash — Future era only |
 | Left Shift | Sprint |
 | Esc | Pause |
 
-## What's in the MVP (GDD §21)
+## What's playable
 
-- **Era selection menu** — full 5-chapter campaign list; 3 chapters playable, unlocked in order
-- **Medieval arena** — sword melee + blocking vs swordsman rushers (GDD §4)
-- **World War II arena** — service rifle vs riflemen who keep distance and strafe (GDD §6)
-- **Future arena** — plasma rifle, double jump + dash vs dashing combat bots (GDD §8)
-- **3 enemy types** with state-machine AI: Idle → Chase → Attack → Dead (GDD §12)
-- **Health / ammo systems**, one *Eliminate all hostiles* objective per arena (GDD §13–14)
-- **JSON save** — chapter unlocks persist between sessions (GDD §18)
+All **five campaign chapters** (GDD §22 order), unlocked in sequence. Each era: themed arena,
+two-weapon loadout with first-person viewmodels, humanoid enemy soldiers, one
+*Eliminate all hostiles* objective.
+
+| Chapter | Loadout | Arena | Enemy |
+|---|---|---|---|
+| Medieval | Longsword + **War Bow** (real arrows, arc + drop, they stick) | castle towers, crenellated walls | swordsman rushers |
+| World War I | Bolt-action rifle + trench knife | trench lines, shell craters, heavy fog | trench riflemen (slow, hard-hitting) |
+| World War II | Service rifle + sidearm | sandbags, ruined walls | riflemen, keep distance + strafe |
+| Modern | **Full-auto** assault carbine + combat knife | city blocks, containers | tougher soldiers, faster fire |
+| Future | Plasma rifle (auto) + energy blade | neon pylons, emissive cover | combat bots that dash |
+
+Plus: weapon recoil/swing animations, muzzle flash, head bob, walking limb animation on
+enemies, damage flash, state-machine AI (GDD §12), health/ammo, JSON save (GDD §18).
 
 ## Architecture (maps to the GDD)
 
 | GDD section | Code |
 |---|---|
 | §9 Shared player systems | `PlayerController`, `EraManager`, `WarEra` |
-| §11 Weapon system | `WeaponBase` → `FirearmWeapon` / `MeleeWeapon` |
-| §12 Enemy AI (FSM) | `EnemyAI` (`EnemyState`) |
+| §11 Weapon system | `WeaponBase` → `FirearmWeapon` / `MeleeWeapon` / `ProjectileWeapon` (+`Arrow`, `WeaponViewModel`) |
+| §12 Enemy AI (FSM) | `EnemyAI` (`EnemyState`) + `EnemyVisual` (procedural humanoid) |
 | §13 Mission system | `MissionObjective` → `EliminateTargetsObjective` |
 | §14 Health & damage | `IDamageable`, `Health` |
 | §18 Save system | `SaveSystem`, `SaveData` |
@@ -60,6 +68,8 @@ Save file: `~/Library/Application Support/Neomoment/Evolution of War/evolution_o
 
 - **Built-in render pipeline** instead of URP (GDD §17 recommends URP) — zero package/version risk
   for clone-and-run; URP upgrade is a clean later step.
-- **Primitive placeholder art** per GDD §23 ("use placeholder assets until the gameplay is fun").
+- **Procedural primitive art** per GDD §23 ("use placeholder assets until the gameplay is fun") —
+  humanoid soldiers, viewmodels and arenas are built from primitives in code. Importing modeled
+  asset packs (Kenney/Quaternius/store) is the next art step and needs the Unity editor.
 - **No NavMesh** — open arenas with low cover only; swap `EnemyAI` movement for `NavMeshAgent`
   when levels gain real geometry. No audio yet (polish phase, GDD §19).

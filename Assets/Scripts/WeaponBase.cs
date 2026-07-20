@@ -9,11 +9,19 @@ public abstract class WeaponBase : MonoBehaviour
     public float attackRate = 2f;  // uses per second
     public int ammunition = -1;    // -1 = not ammo-based (melee)
 
+    [HideInInspector] public WeaponViewModel viewModel;
+
     protected float lastUseTime = -999f;
 
     public bool CanUse()
     {
         return Time.time - lastUseTime >= 1f / attackRate;
+    }
+
+    // Kicks the first-person viewmodel animation (recoil / swing / bow snap).
+    protected void NotifyFired()
+    {
+        if (viewModel != null) viewModel.PlayAttack();
     }
 
     public abstract void UseWeapon();

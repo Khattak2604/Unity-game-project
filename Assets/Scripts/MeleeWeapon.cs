@@ -25,5 +25,6 @@ public class MeleeWeapon : WeaponBase
             if (d != null) victims.Add(d);
         }
         foreach (IDamageable v in victims) v.TakeDamage(damage);
+        NotifyFired();
     }
 }

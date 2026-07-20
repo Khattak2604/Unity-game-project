@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -23,13 +22,13 @@ public class EnemyAI : MonoBehaviour
     public bool canDash;                // Future bot sidestep
     public Color tracerColor = new Color(1f, 0.3f, 0.2f);
 
+    [HideInInspector] public EnemyVisual visual;
+
     EnemyState state = EnemyState.Idle;
     Transform player;
     Health playerHealth;
     Health health;
     CharacterController controller;
-    Renderer bodyRenderer;
-    Color bodyColor;
     float nextAttackTime;
     float windupEnd;
     bool windingUp;
@@ -44,8 +43,6 @@ public class EnemyAI : MonoBehaviour
     {
         health = GetComponent<Health>();
         controller = GetComponent<CharacterController>();
-        bodyRenderer = GetComponent<Renderer>();
-        if (bodyRenderer != null) bodyColor = bodyRenderer.material.color;
         health.onDeath += OnDeath;
         health.onDamaged += OnDamaged;
     }
@@ -70,6 +67,9 @@ public class EnemyAI : MonoBehaviour
         }
 
         float dist = Vector3.Distance(transform.position, player.position);
+
+        if (visual != null)
+            visual.SetMoving(state == EnemyState.Chase || (state == EnemyState.Attack && isRanged));
 
         switch (state)
         {
@@ -170,15 +170,8 @@ public class EnemyAI : MonoBehaviour
 
     void OnDamaged()
     {
-        if (bodyRenderer != null && state != EnemyState.Dead) StartCoroutine(Flash());
+        if (visual != null && state != EnemyState.Dead) visual.Flash();
         if (state == EnemyState.Idle) state = EnemyState.Chase;  // getting shot reveals the player
-    }
-
-    IEnumerator Flash()
-    {
-        bodyRenderer.material.color = Color.white;
-        yield return new WaitForSeconds(0.08f);
-        if (bodyRenderer != null) bodyRenderer.material.color = bodyColor;
     }
 
     void OnDeath()
