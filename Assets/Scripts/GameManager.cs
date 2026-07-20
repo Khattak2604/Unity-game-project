@@ -91,6 +91,7 @@ public class GameManager : MonoBehaviour
         cc.radius = 0.45f;
         PlayerHealth = playerRoot.AddComponent<Health>();
         PlayerHealth.maxHealth = 100f;
+        PlayerHealth.regenRate = 9f;   // forgiving shooter regen after 4s out of fire
         Player = playerRoot.AddComponent<PlayerController>();
         Player.advancedMovement = eraManager.CanUseAdvancedMovement();
         Player.AttachCamera(cam.transform);
@@ -136,7 +137,7 @@ public class GameManager : MonoBehaviour
             case WarEra.Medieval:
                 list.Add(Melee("Longsword", 34f, 1.7f, 2.4f, ViewModelKind.Sword, steel, steel));
                 var bow = NewWeapon<ProjectileWeapon>("War Bow");
-                bow.damage = 40f;
+                bow.damage = 55f;
                 bow.attackRate = 1.1f;
                 bow.launchSpeed = 42f;
                 bow.firePoint = firePoint;

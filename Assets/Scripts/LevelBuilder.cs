@@ -15,6 +15,7 @@ public static class LevelBuilder
         public Vector3 sunAngles;
         public bool emissiveObstacles;
         public int obstacleCount = 14;
+        public int enemyCount = 8;
     }
 
     static Theme For(WarEra era)
@@ -31,7 +32,8 @@ public static class LevelBuilder
                     sun = new Color(1f, 0.93f, 0.78f), sunIntensity = 1.15f,
                     sunAngles = new Vector3(45f, -35f, 0f),
                     ambient = new Color(0.45f, 0.44f, 0.38f),
-                    obstacleCount = 10
+                    obstacleCount = 10,
+                    enemyCount = 6            // melee swarm is brutal — keep the pack small
                 };
             case WarEra.WorldWarOne:
                 return new Theme
@@ -43,7 +45,8 @@ public static class LevelBuilder
                     sun = new Color(0.75f, 0.72f, 0.65f), sunIntensity = 0.65f,
                     sunAngles = new Vector3(30f, 140f, 0f),
                     ambient = new Color(0.32f, 0.3f, 0.27f),
-                    obstacleCount = 6                          // trenches carry the layout
+                    obstacleCount = 6,                         // trenches carry the layout
+                    enemyCount = 7
                 };
             case WarEra.WorldWarTwo:
                 return new Theme
@@ -132,7 +135,7 @@ public static class LevelBuilder
         playerSpawn = new Vector3(0f, 1.2f, -ArenaHalf + 6f);
 
         // Enemy ring across the far half of the arena.
-        int count = 8;
+        int count = t.enemyCount;
         enemySpawns = new Vector3[count];
         for (int i = 0; i < count; i++)
         {
@@ -260,48 +263,50 @@ public static class LevelBuilder
         bool ranged;
         switch (era)
         {
+            // Balance note: sightRange is the pacing lever — enemies engage in
+            // small groups as the player advances instead of all at once.
             case WarEra.Medieval:  // swordsman — fast melee rusher
                 body.name = "Medieval Swordsman";
                 uniform = new Color(0.55f, 0.15f, 0.12f); helmet = new Color(0.7f, 0.7f, 0.72f);
                 ranged = false;
-                ai.moveSpeed = 4.6f; ai.attackRange = 2.3f; ai.attackDamage = 14f;
-                ai.attackRate = 1.1f; ai.attackWindup = 0.4f;
-                health.maxHealth = 70f;
+                ai.moveSpeed = 4.6f; ai.sightRange = 13f; ai.attackRange = 2.3f;
+                ai.attackDamage = 10f; ai.attackRate = 1f; ai.attackWindup = 0.5f;
+                health.maxHealth = 60f;
                 break;
             case WarEra.WorldWarOne:  // trench rifleman — slow deliberate bolt-action
                 body.name = "Trench Rifleman";
                 uniform = new Color(0.42f, 0.38f, 0.3f); helmet = new Color(0.35f, 0.33f, 0.28f);
                 ranged = true;
-                ai.isRanged = true; ai.moveSpeed = 2.8f; ai.attackRange = 16f;
-                ai.attackDamage = 14f; ai.attackRate = 0.45f; ai.attackWindup = 0.75f;
-                ai.rangedSpread = 0.05f; ai.tracerColor = new Color(1f, 0.8f, 0.4f);
-                health.maxHealth = 65f;
+                ai.isRanged = true; ai.moveSpeed = 2.8f; ai.sightRange = 15f; ai.attackRange = 16f;
+                ai.attackDamage = 11f; ai.attackRate = 0.45f; ai.attackWindup = 0.8f;
+                ai.rangedSpread = 0.07f; ai.tracerColor = new Color(1f, 0.8f, 0.4f);
+                health.maxHealth = 60f;
                 break;
             case WarEra.WorldWarTwo:  // rifleman — keeps distance, aimed shots
                 body.name = "WWII Rifleman";
                 uniform = new Color(0.34f, 0.38f, 0.25f); helmet = new Color(0.3f, 0.32f, 0.24f);
                 ranged = true;
-                ai.isRanged = true; ai.moveSpeed = 3.2f; ai.attackRange = 15f;
-                ai.attackDamage = 9f; ai.attackRate = 0.8f; ai.attackWindup = 0.55f;
-                ai.rangedSpread = 0.07f; ai.tracerColor = new Color(1f, 0.85f, 0.45f);
+                ai.isRanged = true; ai.moveSpeed = 3.2f; ai.sightRange = 15f; ai.attackRange = 15f;
+                ai.attackDamage = 7f; ai.attackRate = 0.8f; ai.attackWindup = 0.65f;
+                ai.rangedSpread = 0.09f; ai.tracerColor = new Color(1f, 0.85f, 0.45f);
                 health.maxHealth = 60f;
                 break;
             case WarEra.Modern:  // urban soldier — faster fire, tougher
                 body.name = "Modern Soldier";
                 uniform = new Color(0.25f, 0.27f, 0.24f); helmet = new Color(0.15f, 0.16f, 0.15f);
                 ranged = true;
-                ai.isRanged = true; ai.moveSpeed = 3.8f; ai.attackRange = 14f;
-                ai.attackDamage = 6f; ai.attackRate = 2.2f; ai.attackWindup = 0.35f;
-                ai.rangedSpread = 0.07f; ai.tracerColor = new Color(1f, 0.9f, 0.6f);
-                health.maxHealth = 90f;
+                ai.isRanged = true; ai.moveSpeed = 3.8f; ai.sightRange = 14f; ai.attackRange = 14f;
+                ai.attackDamage = 5f; ai.attackRate = 2f; ai.attackWindup = 0.5f;
+                ai.rangedSpread = 0.09f; ai.tracerColor = new Color(1f, 0.9f, 0.6f);
+                health.maxHealth = 80f;
                 break;
             default:  // Future combat bot — energy fire, dashes sideways
                 body.name = "Future Combat Bot";
                 uniform = new Color(0.15f, 0.17f, 0.2f); helmet = new Color(0.2f, 0.9f, 1f);
                 ranged = true;
                 ai.isRanged = true; ai.canDash = true; ai.moveSpeed = 4.2f;
-                ai.attackRange = 13f; ai.attackDamage = 7f; ai.attackRate = 1.6f;
-                ai.attackWindup = 0.3f; ai.rangedSpread = 0.05f;
+                ai.sightRange = 13f; ai.attackRange = 13f; ai.attackDamage = 5f;
+                ai.attackRate = 1.5f; ai.attackWindup = 0.45f; ai.rangedSpread = 0.08f;
                 ai.tracerColor = new Color(0.3f, 0.95f, 1f);
                 health.maxHealth = 80f;
                 break;
