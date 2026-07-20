@@ -143,9 +143,11 @@ public static class LevelBuilder
         return root;
     }
 
-    // Era-identity landmarks (GDD sections 4-8 environments).
+    // Era-identity landmarks + machinery (GDD sections 4-8 environments).
     static void BuildEraStructures(GameObject root, WarEra era, Theme t, System.Random rng)
     {
+        Color rust = new Color(0.35f, 0.24f, 0.16f);
+        Color wood = new Color(0.4f, 0.28f, 0.15f);
         switch (era)
         {
             case WarEra.Medieval:
@@ -158,6 +160,14 @@ public static class LevelBuilder
                     Block(root, new Vector3(x, 4.3f, ArenaHalf + 0.5f), new Vector3(1.1f, 0.6f, 1f), t.wall, false);
                     Block(root, new Vector3(x, 4.3f, -ArenaHalf - 0.5f), new Vector3(1.1f, 0.6f, 1f), t.wall, false);
                 }
+                // siege catapult (GDD section 4 siege interactions)
+                Block(root, new Vector3(-9f, 0.5f, 2f), new Vector3(3.2f, 1f, 1.8f), wood, false);
+                BlockRot(root, new Vector3(-9f, 1.9f, 1.6f), new Vector3(0.35f, 3.4f, 0.3f), new Vector3(-40f, 0f, 0f), wood);
+                Block(root, new Vector3(-9f, 3.35f, 0.4f), new Vector3(0.9f, 0.35f, 0.9f), wood, false);   // basket
+                Wheel(root, new Vector3(-10.4f, 0.5f, 1f), 0.55f, wood);
+                Wheel(root, new Vector3(-7.6f, 0.5f, 1f), 0.55f, wood);
+                Wheel(root, new Vector3(-10.4f, 0.5f, 3f), 0.55f, wood);
+                Wheel(root, new Vector3(-7.6f, 0.5f, 3f), 0.55f, wood);
                 break;
 
             case WarEra.WorldWarOne:
@@ -173,6 +183,12 @@ public static class LevelBuilder
                     float cz = Mathf.Lerp(-16f, 18f, (float)rng.NextDouble());
                     Decal(root, new Vector3(cx, 0.03f, cz), new Vector3(2.8f, 0.06f, 2.8f), t.floor * 0.55f);
                 }
+                // stranded early tank (GDD section 5 vehicle section) — rhomboid hull + tracks
+                Block(root, new Vector3(8f, 1.1f, 0f), new Vector3(2.2f, 1.6f, 4.6f), rust, false);          // hull
+                BlockRot(root, new Vector3(8f, 1.7f, 2.6f), new Vector3(2.2f, 1.1f, 1.6f), new Vector3(35f, 0f, 0f), rust); // sloped nose
+                Block(root, new Vector3(6.7f, 0.85f, 0f), new Vector3(0.5f, 1.7f, 5.2f), rust * 0.8f, false); // left track
+                Block(root, new Vector3(9.3f, 0.85f, 0f), new Vector3(0.5f, 1.7f, 5.2f), rust * 0.8f, false); // right track
+                BlockRot(root, new Vector3(6.7f, 1.6f, 1.2f), new Vector3(0.35f, 0.35f, 1.6f), new Vector3(0f, 0f, 0f), rust * 0.6f); // side gun sponson
                 break;
 
             case WarEra.WorldWarTwo:
@@ -184,6 +200,11 @@ public static class LevelBuilder
                 }
                 Block(root, new Vector3(-15f, 2.5f, 14f), new Vector3(6f, 5f, 0.6f), t.wall, false);
                 Block(root, new Vector3(15f, 1.8f, 12f), new Vector3(0.6f, 3.6f, 7f), t.wall, false);
+                // knocked-out tank with turret (GDD section 6 tank battle)
+                Block(root, new Vector3(-8f, 0.9f, 1f), new Vector3(2.6f, 1.3f, 4.4f), new Color(0.3f, 0.32f, 0.26f), false);   // hull
+                Block(root, new Vector3(-8f, 2f, 0.6f), new Vector3(1.7f, 0.9f, 2f), new Color(0.28f, 0.3f, 0.24f), false);     // turret
+                BlockRot(root, new Vector3(-8f, 2.15f, 2.6f), new Vector3(0.22f, 0.22f, 2.6f), new Vector3(-4f, 0f, 0f), new Color(0.22f, 0.24f, 0.2f)); // gun
+                BlockRot(root, new Vector3(-6.4f, 0.5f, 3.4f), new Vector3(0.45f, 1.4f, 2f), new Vector3(0f, 30f, 75f), rust);  // thrown track
                 break;
 
             case WarEra.Modern:
@@ -196,6 +217,12 @@ public static class LevelBuilder
                 }
                 Block(root, new Vector3(-6f, 1.25f, 10f), new Vector3(2.5f, 2.5f, 6f), new Color(0.6f, 0.3f, 0.2f), false);
                 Block(root, new Vector3(6f, 1.25f, 4f), new Vector3(6f, 2.5f, 2.5f), new Color(0.25f, 0.4f, 0.5f), false);
+                // armored patrol vehicle (GDD section 7 convoy)
+                Block(root, new Vector3(9f, 1.1f, 0f), new Vector3(2.2f, 1.4f, 5f), new Color(0.22f, 0.24f, 0.22f), false);     // hull
+                Block(root, new Vector3(9f, 2.05f, -0.8f), new Vector3(1.8f, 0.6f, 2f), new Color(0.2f, 0.22f, 0.2f), false);   // cab
+                Block(root, new Vector3(9f, 2.5f, 0.6f), new Vector3(0.5f, 0.35f, 0.9f), new Color(0.16f, 0.17f, 0.16f), false); // turret gun
+                Wheel(root, new Vector3(7.8f, 0.55f, 1.7f), 0.6f, DarkTire); Wheel(root, new Vector3(10.2f, 0.55f, 1.7f), 0.6f, DarkTire);
+                Wheel(root, new Vector3(7.8f, 0.55f, -1.7f), 0.6f, DarkTire); Wheel(root, new Vector3(10.2f, 0.55f, -1.7f), 0.6f, DarkTire);
                 break;
 
             case WarEra.Future:
@@ -203,6 +230,13 @@ public static class LevelBuilder
                 foreach (var p in new[] { new Vector3(-14f, 0f, 8f), new Vector3(14f, 0f, 8f),
                                           new Vector3(-8f, 0f, 16f), new Vector3(8f, 0f, 16f) })
                     Block(root, new Vector3(p.x, 3.5f, p.z), new Vector3(0.5f, 7f, 0.5f), new Color(0.25f, 0.9f, 1f), true);
+                // downed combat mech (GDD section 8) — torso, cockpit, legs, arm cannon
+                Color mech = new Color(0.18f, 0.2f, 0.24f);
+                Block(root, new Vector3(-9f, 1.6f, 1f), new Vector3(2.4f, 2f, 1.6f), mech, false);            // torso
+                Block(root, new Vector3(-9f, 2.4f, 1.8f), new Vector3(1.2f, 0.8f, 0.6f), new Color(0.25f, 0.9f, 1f), true); // cockpit glow
+                BlockRot(root, new Vector3(-10.6f, 0.9f, 0.2f), new Vector3(0.8f, 2.4f, 0.8f), new Vector3(0f, 0f, 55f), mech);  // collapsed leg
+                BlockRot(root, new Vector3(-7.5f, 0.7f, 1.9f), new Vector3(0.8f, 2.2f, 0.8f), new Vector3(60f, 0f, 0f), mech);   // collapsed leg
+                BlockRot(root, new Vector3(-7.4f, 1.9f, 0.2f), new Vector3(0.5f, 0.5f, 2.4f), new Vector3(0f, -25f, 0f), mech * 0.8f); // arm cannon
                 break;
         }
     }
@@ -307,6 +341,8 @@ public static class LevelBuilder
         return m;
     }
 
+    static readonly Color DarkTire = new Color(0.1f, 0.1f, 0.11f);
+
     static void Block(GameObject root, Vector3 pos, Vector3 scale, Color color, bool emissive)
     {
         GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -314,6 +350,27 @@ public static class LevelBuilder
         go.transform.position = pos;
         go.transform.localScale = scale;
         go.GetComponent<Renderer>().material = ColoredMaterial(color, emissive);
+    }
+
+    static void BlockRot(GameObject root, Vector3 pos, Vector3 scale, Vector3 euler, Color color)
+    {
+        GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.transform.SetParent(root.transform);
+        go.transform.position = pos;
+        go.transform.rotation = Quaternion.Euler(euler);
+        go.transform.localScale = scale;
+        go.GetComponent<Renderer>().material = ColoredMaterial(color, false);
+    }
+
+    // wheel: cylinder lying on its side, axle along x
+    static void Wheel(GameObject root, Vector3 pos, float radius, Color color)
+    {
+        GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        go.transform.SetParent(root.transform);
+        go.transform.position = pos;
+        go.transform.rotation = Quaternion.Euler(0f, 0f, 90f);
+        go.transform.localScale = new Vector3(radius * 2f, 0.15f, radius * 2f);
+        go.GetComponent<Renderer>().material = ColoredMaterial(color, false);
     }
 
     static void Cylinder(GameObject root, Vector3 pos, float radius, float height, Color color)

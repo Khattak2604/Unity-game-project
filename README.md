@@ -47,8 +47,13 @@ two-weapon loadout with first-person viewmodels, humanoid enemy soldiers, one
 | Modern | **Full-auto** assault carbine + combat knife | city blocks, containers | tougher soldiers, faster fire |
 | Future | Plasma rifle (auto) + energy blade | neon pylons, emissive cover | combat bots that dash |
 
-Plus: weapon recoil/swing animations, muzzle flash, head bob, walking limb animation on
-enemies, damage flash, state-machine AI (GDD §12), health/ammo, JSON save (GDD §18).
+Plus: era machinery landmarks (siege catapult, WWI early tank, knocked-out WWII tank, armored
+patrol vehicle, downed combat mech), detailed weapon models (stocks, sights, magazines, bolt
+handles, nocked arrow on the bow), recoil/swing animations, muzzle flash, head bob, walking limb
+animation on enemies, damage flash, state-machine AI (GDD §12), health/ammo, JSON save (GDD §18).
+
+**Guides** for editor-side work (Timeline/Cinemachine cut scenes, layered audio, asset import)
+live in [`docs/`](docs/).
 
 ## Architecture (maps to the GDD)
 
