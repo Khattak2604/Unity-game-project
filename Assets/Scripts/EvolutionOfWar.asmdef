@@ -1,0 +1,28 @@
+{
+    "name": "EvolutionOfWar",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Timeline",
+        "Unity.Cinemachine"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.timeline",
+            "expression": "",
+            "define": "HAS_TIMELINE"
+        },
+        {
+            "name": "com.unity.cinemachine",
+            "expression": "3",
+            "define": "HAS_CINEMACHINE"
+        }
+    ],
+    "noEngineReferences": false
+}
