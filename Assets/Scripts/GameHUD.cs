@@ -28,7 +28,40 @@ public class GameHUD : MonoBehaviour
             case GameManager.GameState.Won: DrawHud(gm); DrawWon(gm); break;
             case GameManager.GameState.Dead: DrawHud(gm); DrawDead(gm); break;
             case GameManager.GameState.Paused: DrawHud(gm); DrawPaused(gm); break;
+            case GameManager.GameState.Cutscene: DrawCutscene(gm); break;
         }
+    }
+
+    void DrawCutscene(GameManager gm)
+    {
+        var cs = gm.Cutscenes;
+        if (cs == null) return;
+
+        // letterbox bars
+        float barH = cs.Letterbox * Screen.height;
+        if (barH > 0.5f)
+        {
+            Fill(new Rect(0, 0, Screen.width, barH), Color.black);
+            Fill(new Rect(0, Screen.height - barH, Screen.width, barH), Color.black);
+        }
+
+        // era title card
+        if (!string.IsNullOrEmpty(cs.TitleText))
+        {
+            big.fontSize = (int)(46 * S);
+            big.normal.textColor = new Color(0.92f, 0.88f, 0.78f);
+            GUI.Label(Centered(1400 * S, 70 * S, Screen.height * 0.66f), cs.TitleText, big);
+            small.fontSize = (int)(24 * S);
+            small.normal.textColor = new Color(0.75f, 0.75f, 0.72f);
+            GUI.Label(Centered(1400 * S, 40 * S, Screen.height * 0.66f + 74 * S), cs.SubtitleText, small);
+        }
+
+        small.fontSize = (int)(17 * S);
+        small.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
+        small.alignment = TextAnchor.MiddleRight;
+        GUI.Label(new Rect(Screen.width - 320 * S, Screen.height - 34 * S, 300 * S, 24 * S),
+            "click / space to skip", small);
+        small.alignment = TextAnchor.MiddleCenter;
     }
 
     float S { get { return Screen.height / 1080f; } }

@@ -3,7 +3,7 @@ using UnityEngine;
 // Central conductor: menu state, chapter start, win/lose, save (GDD sections 9/13/18).
 public class GameManager : MonoBehaviour
 {
-    public enum GameState { Menu, Playing, Won, Dead, Paused }
+    public enum GameState { Menu, Playing, Won, Dead, Paused, Cutscene }
 
     public static GameManager Instance { get; private set; }
 
@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
     public Health PlayerHealth { get; private set; }
     public MissionObjective Objective { get; private set; }
     public int CurrentChapter { get; private set; }
+    public CutsceneDirector Cutscenes { get; private set; }
 
     Camera cam;
     Light sun;
@@ -40,6 +41,7 @@ public class GameManager : MonoBehaviour
 
         eraManager = gameObject.AddComponent<EraManager>();
         gameObject.AddComponent<GameHUD>();
+        Cutscenes = gameObject.AddComponent<CutsceneDirector>();
         save = SaveSystem.Load();
 
         cam = Camera.main;
@@ -94,10 +96,7 @@ public class GameManager : MonoBehaviour
         PlayerHealth.regenRate = 9f;   // forgiving shooter regen after 4s out of fire
         Player = playerRoot.AddComponent<PlayerController>();
         Player.advancedMovement = eraManager.CanUseAdvancedMovement();
-        Player.AttachCamera(cam.transform);
-        cam.fieldOfView = 70f;
         PlayerHealth.onDeath += OnPlayerDeath;
-        Player.SetWeapons(CreateLoadout(era, cc));
 
         foreach (Vector3 spawn in enemySpawns)
             LevelBuilder.SpawnEnemy(era, spawn, playerRoot.transform, levelRoot.transform);
@@ -111,8 +110,17 @@ public class GameManager : MonoBehaviour
         obj.onCompleted += OnObjectiveComplete;
         Objective = obj;
 
-        State = GameState.Playing;
+        // Chapter intro cinematic (gameplay-event trigger: chapter start);
+        // camera and weapons attach when it finishes or is skipped.
+        State = GameState.Cutscene;
         SetCursorLocked(true);
+        cam.fieldOfView = 70f;
+        Cutscenes.PlayIntro(era, index, cam, playerSpawn, () =>
+        {
+            Player.AttachCamera(cam.transform);
+            Player.SetWeapons(CreateLoadout(era, cc));
+            State = GameState.Playing;
+        });
     }
 
     // Two weapons per era (GDD section 20): a ranged + melee pair, each with a
@@ -218,12 +226,21 @@ public class GameManager : MonoBehaviour
     void OnObjectiveComplete()
     {
         if (State != GameState.Playing) return;
-        State = GameState.Won;
         if (CurrentChapter == save.unlockedChapter && save.unlockedChapter < Chapters.Length - 1)
             save.unlockedChapter++;
         save.chaptersCompleted = Mathf.Max(save.chaptersCompleted, CurrentChapter + 1);
         SaveSystem.Save(save);
-        SetCursorLocked(false);
+
+        // Victory cinematic (gameplay-event trigger: level completion).
+        State = GameState.Cutscene;
+        foreach (var w in Player.weapons)
+            if (w.viewModel != null) w.viewModel.gameObject.SetActive(false);
+        cam.transform.SetParent(null);
+        Cutscenes.PlayVictory(cam, Player.transform.position, () =>
+        {
+            State = GameState.Won;
+            SetCursorLocked(false);
+        });
     }
 
     void OnPlayerDeath()
@@ -260,6 +277,7 @@ public class GameManager : MonoBehaviour
 
     void ClearLevel()
     {
+        if (Cutscenes != null) Cutscenes.Abort();
         EnemyAI.Alive.Clear();
         if (cam != null)
         {
