@@ -31,6 +31,7 @@ public class FirearmWeapon : WeaponBase
         if (IsReloading || reserveAmmo <= 0 || ammunition >= magazineSize) return;
         IsReloading = true;
         reloadEndTime = Time.time + reloadDuration;
+        AudioDirector.UI("reload", 0.7f);
     }
 
     public override void UseWeapon()
@@ -52,6 +53,7 @@ public class FirearmWeapon : WeaponBase
             if (target != null) target.TakeDamage(damage);
         }
         Tracer.Spawn(firePoint.position - firePoint.up * 0.12f, end, tracerColor);
+        AudioDirector.SFX(sfxKey, firePoint.position);
         NotifyFired();
     }
 }

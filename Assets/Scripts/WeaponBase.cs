@@ -10,6 +10,7 @@ public abstract class WeaponBase : MonoBehaviour
     public int ammunition = -1;    // -1 = not ammo-based (melee)
 
     [HideInInspector] public WeaponViewModel viewModel;
+    [HideInInspector] public string sfxKey = "";
 
     protected float lastUseTime = -999f;
 

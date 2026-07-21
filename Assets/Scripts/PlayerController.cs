@@ -34,6 +34,8 @@ public class PlayerController : MonoBehaviour
     float dashEnd;
     Vector3 dashDir;
     float bobPhase;
+    float nextStepTime;
+    bool stepToggle;
 
     void Awake()
     {
@@ -78,6 +80,7 @@ public class PlayerController : MonoBehaviour
         activeWeapon = index;
         IsBlocking = false;
         RefreshViewModels();
+        AudioDirector.UI("switch", 0.6f);
     }
 
     void Update()
@@ -122,8 +125,8 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (grounded) verticalVelocity = jumpSpeed;
-            else if (airJumpsLeft > 0) { verticalVelocity = jumpSpeed; airJumpsLeft--; }
+            if (grounded) { verticalVelocity = jumpSpeed; AudioDirector.UI("jump", 0.5f); }
+            else if (airJumpsLeft > 0) { verticalVelocity = jumpSpeed; airJumpsLeft--; AudioDirector.UI("jump", 0.5f); }
         }
 
         if (advancedMovement && Input.GetKeyDown(KeyCode.Q) && DashReadyIn <= 0f)
@@ -131,6 +134,15 @@ public class PlayerController : MonoBehaviour
             dashDir = move.sqrMagnitude > 0.1f ? move.normalized : transform.forward;
             dashEnd = Time.time + 0.18f;
             dashCooldownEnd = Time.time + DashCooldown;
+            AudioDirector.UI("dash", 0.7f);
+        }
+
+        // footsteps synced to stride
+        if (IsMoving && Time.time >= nextStepTime)
+        {
+            AudioDirector.UI(stepToggle ? "step_a" : "step_b", 0.6f);
+            stepToggle = !stepToggle;
+            nextStepTime = Time.time + (speed > moveSpeed ? 0.3f : 0.42f);
         }
         if (Time.time < dashEnd) move = dashDir * 22f;
 

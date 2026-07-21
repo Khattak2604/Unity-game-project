@@ -44,6 +44,7 @@ public class GameManager : MonoBehaviour
         eraManager = gameObject.AddComponent<EraManager>();
         gameObject.AddComponent<GameHUD>();
         Cutscenes = gameObject.AddComponent<CutsceneDirector>();
+        gameObject.AddComponent<AudioDirector>();
         save = SaveSystem.Load();
 
         cam = Camera.main;
@@ -124,6 +125,8 @@ public class GameManager : MonoBehaviour
         Player = playerRoot.AddComponent<PlayerController>();
         Player.advancedMovement = eraManager.CanUseAdvancedMovement();
         PlayerHealth.onDeath += OnPlayerDeath;
+        PlayerHealth.onDamaged += () => AudioDirector.UI("hurt", 0.8f);
+        if (AudioDirector.Instance != null) AudioDirector.Instance.StartEra(era);
 
         foreach (Vector3 spawn in enemySpawns)
             LevelBuilder.SpawnEnemy(era, spawn, playerRoot.transform, levelRoot.transform);
@@ -167,6 +170,7 @@ public class GameManager : MonoBehaviour
         Color gunmetal = new Color(0.2f, 0.2f, 0.22f);
         Color cyan = new Color(0.3f, 0.95f, 1f);
 
+        // per-weapon shot sounds
         switch (era)
         {
             case WarEra.Medieval:
@@ -246,6 +250,10 @@ public class GameManager : MonoBehaviour
         f.autoFire = auto;
         f.tracerColor = tracer;
         f.firePoint = firePoint;
+        f.sfxKey = kind == ViewModelKind.Pistol ? "shot_pistol"
+                 : auto && emissive ? "shot_plasma"
+                 : auto ? "shot_auto"
+                 : "shot_rifle";
         f.viewModel = WeaponViewModel.Create(cam, kind, main, accent, emissive);
         return f;
     }
@@ -285,6 +293,7 @@ public class GameManager : MonoBehaviour
         ClearLevel();
         Time.timeScale = 1f;
         State = GameState.Menu;
+        if (AudioDirector.Instance != null) AudioDirector.Instance.StartMenu();
         RenderSettings.fog = false;
         cam.transform.SetParent(null);
         cam.transform.position = new Vector3(0f, 14f, -26f);

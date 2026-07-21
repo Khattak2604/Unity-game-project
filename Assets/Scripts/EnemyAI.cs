@@ -166,17 +166,20 @@ public class EnemyAI : MonoBehaviour
             if (target != null && (Object)target != (Object)health) target.TakeDamage(attackDamage);
         }
         Tracer.Spawn(origin, end, tracerColor);
+        AudioDirector.SFX("shot_rifle", origin, 0.7f);
     }
 
     void OnDamaged()
     {
         if (visual != null && state != EnemyState.Dead) visual.Flash();
+        if (state != EnemyState.Dead) AudioDirector.SFX("hit", transform.position, 0.7f);
         if (state == EnemyState.Idle) state = EnemyState.Chase;  // getting shot reveals the player
     }
 
     void OnDeath()
     {
         state = EnemyState.Dead;
+        AudioDirector.SFX("death", transform.position, 0.8f);
         Alive.Remove(this);  // objective sees the kill immediately, not after cleanup
         if (controller != null) controller.enabled = false;
         transform.rotation = Quaternion.Euler(90f, transform.eulerAngles.y, 0f);  // tip over

@@ -17,6 +17,7 @@ public class ProjectileWeapon : WeaponBase
             firePoint.position + firePoint.forward * 0.6f,
             firePoint.forward * launchSpeed + firePoint.up * upKick,
             damage, ownerCollider, arrowColor);
+        AudioDirector.SFX("bow", firePoint.position);
         NotifyFired();
     }
 }

@@ -40,6 +40,7 @@ public class Arrow : MonoBehaviour
         stuck = true;
         IDamageable target = collision.collider.GetComponentInParent<IDamageable>();
         if (target != null) target.TakeDamage(damage);
+        AudioDirector.SFX("arrow_hit", transform.position, 0.8f);
         rb.isKinematic = true;
         GetComponent<Collider>().enabled = false;
         transform.SetParent(collision.transform);   // stick into the victim/wall
