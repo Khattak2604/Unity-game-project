@@ -25,6 +25,8 @@ public class GameManager : MonoBehaviour
     Light sun;
     GameObject levelRoot;
     GameObject playerRoot;
+    bool lastStandPlayed;
+    bool pendingObjectiveComplete;
 
     // Safety net: boots the game even if the scene ever loads empty/damaged.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -68,6 +70,29 @@ public class GameManager : MonoBehaviour
             if (State == GameState.Playing) Pause(true);
             else if (State == GameState.Paused) Pause(false);
         }
+
+        // Third cutscene trigger (gameplay event: enemy count) — one hostile left.
+        if (State == GameState.Playing && !lastStandPlayed
+            && Objective is EliminateTargetsObjective eto && eto.totalTargets > 1
+            && EnemyAI.Alive.Count == 1)
+        {
+            lastStandPlayed = true;
+            var last = EnemyAI.Alive[0];
+            State = GameState.Cutscene;
+            Player.ShowViewModels(false);
+            cam.transform.SetParent(null);
+            Cutscenes.PlayLastStand(cam, last.transform.position, () =>
+            {
+                Player.AttachCamera(cam.transform);
+                Player.ShowViewModels(true);
+                State = GameState.Playing;
+                if (pendingObjectiveComplete)
+                {
+                    pendingObjectiveComplete = false;
+                    OnObjectiveComplete();
+                }
+            });
+        }
     }
 
     public bool IsChapterUnlocked(int index)
@@ -81,6 +106,8 @@ public class GameManager : MonoBehaviour
         WarEra era = Chapters[index];
         eraManager.currentEra = era;
         Time.timeScale = 1f;
+        lastStandPlayed = false;
+        pendingObjectiveComplete = false;
 
         ClearLevel();
         levelRoot = LevelBuilder.Build(era, sun, out Vector3 playerSpawn, out Vector3[] enemySpawns);
@@ -225,6 +252,8 @@ public class GameManager : MonoBehaviour
 
     void OnObjectiveComplete()
     {
+        // An arrow can finish the last enemy mid-cutscene — defer, don't drop.
+        if (State == GameState.Cutscene) { pendingObjectiveComplete = true; return; }
         if (State != GameState.Playing) return;
         if (CurrentChapter == save.unlockedChapter && save.unlockedChapter < Chapters.Length - 1)
             save.unlockedChapter++;
@@ -233,8 +262,7 @@ public class GameManager : MonoBehaviour
 
         // Victory cinematic (gameplay-event trigger: level completion).
         State = GameState.Cutscene;
-        foreach (var w in Player.weapons)
-            if (w.viewModel != null) w.viewModel.gameObject.SetActive(false);
+        Player.ShowViewModels(false);
         cam.transform.SetParent(null);
         Cutscenes.PlayVictory(cam, Player.transform.position, () =>
         {

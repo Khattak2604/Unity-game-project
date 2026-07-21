@@ -61,9 +61,15 @@ public class PlayerController : MonoBehaviour
 
     void RefreshViewModels()
     {
+        ShowViewModels(true);
+    }
+
+    // Cutscenes hide the first-person weapon; restore shows only the active one.
+    public void ShowViewModels(bool show)
+    {
         for (int i = 0; i < weapons.Count; i++)
             if (weapons[i].viewModel != null)
-                weapons[i].viewModel.gameObject.SetActive(i == activeWeapon);
+                weapons[i].viewModel.gameObject.SetActive(show && i == activeWeapon);
     }
 
     void SwitchWeapon(int index)
